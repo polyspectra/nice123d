@@ -168,8 +168,6 @@ def shutdown_all():
         raise
 
 
-app.on_startup(startup_all)
-
 button_frac = 0.05
 
 
@@ -225,7 +223,6 @@ keyboard = ui.keyboard(on_key=handle_key)
 app.on_shutdown(shutdown_all)  # register shutdown handler
 
 def main():
-    startup_all()
     ui.run(
         native=False,
         host='0.0.0.0',
