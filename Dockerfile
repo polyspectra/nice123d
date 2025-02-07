@@ -32,11 +32,20 @@ COPY . .
 # Set up startup script with correct permissions
 RUN chmod +x start.sh
 
-# Configure Nginx
-RUN mkdir -p /run/nginx && \
-    chown -R www-data:www-data /run/nginx && \
+# Configure Nginx with proper permissions
+RUN mkdir -p /var/lib/nginx/body && \
+    mkdir -p /var/lib/nginx/fastcgi && \
+    mkdir -p /var/lib/nginx/proxy && \
+    mkdir -p /var/lib/nginx/scgi && \
+    mkdir -p /var/lib/nginx/uwsgi && \
+    mkdir -p /run/nginx && \
+    chown -R www-data:www-data /var/lib/nginx && \
     chown -R www-data:www-data /var/log/nginx && \
-    chown -R www-data:www-data /var/lib/nginx
+    chown -R www-data:www-data /run/nginx && \
+    chmod 755 /var/lib/nginx && \
+    chmod -R 755 /var/lib/nginx/* && \
+    chmod -R 755 /var/log/nginx && \
+    chmod -R 755 /run/nginx
 
 # Create a non-root user and set up home directory
 RUN useradd -m -d /home/appuser -s /bin/bash appuser && \
@@ -61,9 +70,11 @@ RUN wget https://github.com/gitpod-io/openvscode-server/releases/download/openvs
     rm /tmp/openvscode-server.tar.gz && \
     mv /opt/openvscode-server-v1.86.2-linux-x64 /opt/openvscode-server
 
-# Set permissions for the entire /code directory
+# Set permissions for the entire /code directory and nginx config
 RUN chown -R appuser:appuser /code && \
-    chown -R appuser:appuser /opt/openvscode-server
+    chown -R appuser:appuser /opt/openvscode-server && \
+    chown -R appuser:appuser /etc/nginx && \
+    chmod -R 755 /etc/nginx
 
 # Switch to non-root user
 USER appuser
