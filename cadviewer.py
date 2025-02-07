@@ -198,14 +198,8 @@ with ui.splitter().classes(
             space_url = os.getenv('SPACE_URL', '')
             logger.info(f"Space URL: {space_url}")
             
-            # Construct the viewer URL
-            if space_url:
-                # We're in a Hugging Face Space
-                viewer_url = f"{space_url}/proxy/3939/viewer"
-            else:
-                # Local development
-                viewer_url = "http://localhost:3939/viewer"
-                
+            # Construct the viewer URL - always use /viewer since Nginx handles the routing
+            viewer_url = "/viewer"
             logger.info(f"Using viewer URL: {viewer_url}")
             
             ocpcv = (

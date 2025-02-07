@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y \
     libx11-6 \
     libx11-dev \
     libxrender1 \
+    nginx \
     && rm -rf /var/lib/apt/lists/*
 
 # Create matplotlib config directory with proper permissions
@@ -31,6 +32,13 @@ RUN useradd -m -d /home/appuser -s /bin/bash appuser && \
     echo "{}" > /home/appuser/.ocpvscode && \
     chown -R appuser:appuser /home/appuser && \
     chmod 666 /home/appuser/.ocpvscode
+
+# Configure Nginx
+COPY nginx.conf /etc/nginx/nginx.conf
+RUN mkdir -p /run/nginx && \
+    chown -R appuser:appuser /run/nginx && \
+    chown -R appuser:appuser /var/log/nginx && \
+    chown -R appuser:appuser /var/lib/nginx
 
 # Install uv and create virtual environment
 RUN pip install uv && \
@@ -62,5 +70,9 @@ ENV HOME=/home/appuser
 # Expose port 7860 for Hugging Face Spaces
 EXPOSE 7860
 
-# Run the application
-CMD ["python", "-c", "import cadviewer; from nicegui import app; app.native.start_args['port'] = 7860; cadviewer.ui.run(native=False, host='0.0.0.0', port=7860)"] 
+# Create startup script
+COPY start.sh /code/start.sh
+RUN chmod +x /code/start.sh
+
+# Run the startup script
+CMD ["/code/start.sh"] 
