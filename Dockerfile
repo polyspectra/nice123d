@@ -16,6 +16,12 @@ RUN apt-get update && apt-get install -y \
 # Create matplotlib config directory with proper permissions
 ENV MPLCONFIGDIR=/tmp/matplotlib
 
+# Create cache directories with proper permissions
+RUN mkdir -p /.cache/ezdxf && \
+    chmod 777 /.cache/ezdxf && \
+    touch /.ocpvscode.lock && \
+    chmod 777 /.ocpvscode.lock
+
 # Install uv and create virtual environment
 RUN pip install uv && \
     uv venv /opt/venv
