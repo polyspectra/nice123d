@@ -19,8 +19,11 @@ ENV MPLCONFIGDIR=/tmp/matplotlib
 # Create cache directories with proper permissions
 RUN mkdir -p /.cache/ezdxf && \
     chmod 777 /.cache/ezdxf && \
-    touch /.ocpvscode.lock && \
-    chmod 777 /.ocpvscode.lock
+    mkdir -p /tmp/ocpvscode && \
+    chmod 777 /tmp/ocpvscode
+
+# Set OCP_VSCODE_LOCK_DIR environment variable
+ENV OCP_VSCODE_LOCK_DIR=/tmp/ocpvscode
 
 # Install uv and create virtual environment
 RUN pip install uv && \
