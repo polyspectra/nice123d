@@ -52,4 +52,4 @@ RUN wget https://github.com/gitpod-io/openvscode-server/releases/download/openvs
 EXPOSE 7860
 
 # Run the application
-CMD ["python", "-c", "import cadviewer; from nicegui import app; app.native.start_args['port'] = 7860; cadviewer.ui.run(native=False, host='0.0.0.0', port=7860)"] 
+CMD ["sh", "-c", "mkdir -p /tmp/ocpvscode && chmod 777 /tmp/ocpvscode && OCP_VSCODE_LOCK_DIR=/tmp/ocpvscode python -c 'import cadviewer; from nicegui import app; app.native.start_args[\"port\"] = 7860; cadviewer.ui.run(native=False, host=\"0.0.0.0\", port=7860)'"] 
