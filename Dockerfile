@@ -25,6 +25,12 @@ RUN mkdir -p /.cache/ezdxf && \
 # Set OCP_VSCODE_LOCK_DIR environment variable
 ENV OCP_VSCODE_LOCK_DIR=/tmp/ocpvscode
 
+# Create a non-root user and set up home directory
+RUN useradd -m -d /home/appuser -s /bin/bash appuser && \
+    mkdir -p /home/appuser/.ocpvscode && \
+    chown -R appuser:appuser /home/appuser && \
+    chmod 777 /home/appuser/.ocpvscode
+
 # Install uv and create virtual environment
 RUN pip install uv && \
     uv venv /opt/venv
@@ -46,10 +52,14 @@ RUN wget https://github.com/gitpod-io/openvscode-server/releases/download/openvs
     tar -xzf /tmp/openvscode-server.tar.gz -C /opt && \
     rm /tmp/openvscode-server.tar.gz && \
     mv /opt/openvscode-server-v1.86.2-linux-x64 /opt/openvscode-server && \
-    chown -R 1000:1000 /opt/openvscode-server
+    chown -R appuser:appuser /opt/openvscode-server
+
+# Switch to non-root user
+USER appuser
+ENV HOME=/home/appuser
 
 # Expose port 7860 for Hugging Face Spaces
 EXPOSE 7860
 
 # Run the application
-CMD ["sh", "-c", "OCP_VSCODE_LOCK_DIR=/tmp/ocpvscode python -c 'import cadviewer; from nicegui import app; app.native.start_args[\"port\"] = 7860; cadviewer.ui.run(native=False, host=\"0.0.0.0\", port=7860)'"] 
+CMD ["python", "-c", "import cadviewer; from nicegui import app; app.native.start_args['port'] = 7860; cadviewer.ui.run(native=False, host='0.0.0.0', port=7860)"] 
