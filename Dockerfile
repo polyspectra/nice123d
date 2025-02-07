@@ -11,8 +11,12 @@ RUN apt-get update && apt-get install -y \
 # Create matplotlib config directory with proper permissions
 ENV MPLCONFIGDIR=/tmp/matplotlib
 
-# Install uv
-RUN pip install uv
+# Install uv and create virtual environment
+RUN pip install uv && \
+    uv venv /opt/venv
+
+# Activate virtual environment
+ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy only pyproject.toml first to leverage Docker cache
 COPY pyproject.toml .
