@@ -101,8 +101,8 @@ def check_viewer_ready():
     """Check if the viewer is ready by attempting a test connection"""
     try:
         import requests
-        # Check from inside the container using localhost
-        response = requests.get('http://localhost:3939/viewer')
+        # Check the viewer through Nginx proxy
+        response = requests.get('http://localhost:7860/viewer/')
         return response.status_code == 200
     except Exception as e:
         logger.error(f"Error checking viewer: {str(e)}")
@@ -199,7 +199,7 @@ with ui.splitter().classes(
             logger.info(f"Space URL: {space_url}")
             
             # Construct the viewer URL - use relative path for both local and Space environments
-            viewer_url = "/proxy/3939/viewer"
+            viewer_url = "/viewer/"  # Changed to match Nginx configuration
             logger.info(f"Using viewer URL: {viewer_url}")
             
             ocpcv = (
