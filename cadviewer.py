@@ -64,8 +64,9 @@ app.native.settings["MATPLOTLIB"] = False
 editor_fontsize = 18
 # TODO: consider separate editor execution thread from nicegui thread
 
-# Global variable to track viewer initialization
+# Global variables to track viewer and connection state
 viewer_initialized = False
+viewer_ready = False
 
 # run ocp_vscode in a subprocess
 def startup_all():
@@ -85,13 +86,21 @@ def startup_all():
         
         # Wait for viewer to initialize
         logger.info("Waiting for viewer to initialize...")
-        time.sleep(2)  # Give the viewer some time to start
+        time.sleep(3)  # Give more time for the viewer to start
         viewer_initialized = True
         logger.info("Viewer initialization complete")
     except Exception as e:
         logger.error(f"Error in startup: {str(e)}", exc_info=True)
         raise
 
+def check_viewer_ready():
+    """Check if the viewer is ready by attempting a test connection"""
+    try:
+        import requests
+        response = requests.get('http://0.0.0.0:3939/viewer')
+        return response.status_code == 200
+    except:
+        return False
 
 def button_run_callback():
     try:
@@ -99,17 +108,31 @@ def button_run_callback():
             logger.warning("Viewer not initialized yet, please wait...")
             return
             
-        time.sleep(0.5)  # Add a small delay to allow viewer initialization
+        # Add a check for viewer readiness
+        if not check_viewer_ready():
+            logger.warning("Viewer not ready yet, please wait a moment and try again...")
+            return
+
+        # Add a delay to ensure WebSocket connection is established
+        time.sleep(1)  # Increased delay for WebSocket setup
+        
         logger.info("Executing user code")
         # Create a clean namespace for execution
         namespace = {}
         exec("from build123d import *\nfrom ocp_vscode import *", namespace)
         exec("set_defaults(reset_camera=Camera.KEEP)\nset_port(3939)", namespace)
-        exec(code.value, namespace)
-        logger.info("User code execution completed")
+        
+        # Wrap the user code execution in a try-except block
+        try:
+            exec(code.value, namespace)
+            logger.info("User code execution completed successfully")
+        except Exception as e:
+            logger.error(f"Error in user code: {str(e)}")
+            raise
+            
     except Exception as e:
         logger.error(f"Error executing user code: {str(e)}", exc_info=True)
-        raise  # Re-raise the exception to show it in the UI
+        raise
 
 
 def shutdown_all():
@@ -150,6 +173,8 @@ with ui.splitter().classes(
             )
     with splitter.after:
         with ui.column().classes("w-full items-stretch border"):
+            # Add a small delay before loading the iframe
+            ui.timer(3.0, lambda: None, once=True)  # Wait for viewer to be ready
             ocpcv = (
                 ui.element("iframe")
                 .props('src="http://0.0.0.0:3939/viewer"')
