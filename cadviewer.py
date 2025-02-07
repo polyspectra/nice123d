@@ -219,13 +219,18 @@ def handle_key(e: KeyEventArguments):
 keyboard = ui.keyboard(on_key=handle_key)
 # TODO: consider separating this module and how best to organize it (if name == main, etc.)
 app.on_shutdown(shutdown_all)  # register shutdown handler
-ui.run(
-    native=False,  # Changed from True to False for web deployment
-    host='0.0.0.0',  # Listen on all interfaces
-    port=7860,  # Use port 7860 for Spaces
-    title="nicegui-cadviewer",
-    reload=False
-)
-# ui.run(native=True, window_size=(1800, 900), fullscreen=False, reload=True) #use reload=True when developing rapidly, False helps exit behavior
+
+def main():
+    startup_all()
+    ui.run(
+        native=False,
+        host='0.0.0.0',
+        port=7861,  # Use 7861 consistently
+        title="nicegui-cadviewer",
+        reload=False
+    )
+
+if __name__ == "__main__":
+    main()
 
 # layout info https://github.com/zauberzeug/nicegui/discussions/1937
