@@ -97,7 +97,7 @@ def check_viewer_ready():
     """Check if the viewer is ready by attempting a test connection"""
     try:
         import requests
-        # Use localhost for the check since we're checking from inside the container
+        # Check from inside the container using localhost
         response = requests.get('http://localhost:3939/viewer')
         return response.status_code == 200
     except:
@@ -188,9 +188,10 @@ with ui.splitter().classes(
         with ui.column().classes("w-full items-stretch border"):
             # Add a small delay before loading the iframe
             ui.timer(3.0, lambda: None, once=True)  # Wait for viewer to be ready
+            # Use relative URL to work in any environment
             ocpcv = (
                 ui.element("iframe")
-                .props('src="http://localhost:3939/viewer"')  # Use localhost for the iframe
+                .props('src="/proxy/3939/viewer"')  # Use Spaces proxy URL
                 .classes("h-[calc(100vh-3rem)]")
             )
 
