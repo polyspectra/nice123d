@@ -51,7 +51,7 @@ editor_fontsize = 18
 def startup_all():
     global ocpcv_proc
     # spawn separate viewer process
-    ocpcv_proc = subprocess.Popen(["python", "-m", "ocp_vscode"])
+    ocpcv_proc = subprocess.Popen(["python", "-m", "ocp_vscode", "--host", "0.0.0.0"])
     # pre-import build123d and ocp_vscode in main thread
     exec("from build123d import *\nfrom ocp_vscode import *")
 
@@ -95,7 +95,7 @@ with ui.splitter().classes(
         with ui.column().classes("w-full items-stretch border"):
             ocpcv = (
                 ui.element("iframe")
-                .props('src="http://127.0.0.1:3939/viewer"')
+                .props('src="http://0.0.0.0:3939/viewer"')
                 .classes("h-[calc(100vh-3rem)]")
             )
 
@@ -113,7 +113,7 @@ app.on_shutdown(shutdown_all)  # register shutdown handler
 ui.run(
     native=False,  # Changed from True to False for web deployment
     host='0.0.0.0',  # Listen on all interfaces
-    port=8080,  # Use port 8080 for Spaces
+    port=7860,  # Use port 7860 for Spaces
     title="nicegui-cadviewer",
     reload=False
 )
