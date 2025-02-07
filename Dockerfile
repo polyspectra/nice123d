@@ -100,9 +100,9 @@ http {\n\
             proxy_set_header X-Forwarded-Proto $scheme;\n\
         }\n\
         \n\
-        # Viewer route\n\
+        # Viewer route - explicitly handle the viewer path\n\
         location /viewer/ {\n\
-            proxy_pass http://viewer;\n\
+            proxy_pass http://viewer/viewer/;\n\
             proxy_http_version 1.1;\n\
             proxy_set_header Upgrade $http_upgrade;\n\
             proxy_set_header Connection $connection_upgrade;\n\
