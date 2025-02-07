@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
     libxrender1 \
     nginx \
     curl \
-    netcat \
+    netcat-traditional \
     && rm -rf /var/lib/apt/lists/*
 
 # Create matplotlib config directory with proper permissions
