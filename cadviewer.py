@@ -33,10 +33,26 @@ license:
 
 """
 
+import os
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Set environment variable before importing ocp_vscode
+lock_dir = os.environ.get('OCP_VSCODE_LOCK_DIR', '/tmp/ocpvscode')
+os.environ['OCP_VSCODE_LOCK_DIR'] = lock_dir
+logger.info(f"Using lock directory: {lock_dir}")
+logger.info(f"Current working directory: {os.getcwd()}")
+logger.info(f"Directory contents of lock dir parent: {os.listdir(os.path.dirname(lock_dir))}")
+logger.info(f"Lock dir exists: {os.path.exists(lock_dir)}")
+if os.path.exists(lock_dir):
+    logger.info(f"Lock dir permissions: {oct(os.stat(lock_dir).st_mode)[-3:]}")
+
 from nicegui import app, ui
 from nicegui.events import KeyEventArguments
 import subprocess
-import os
 
 app.native.window_args["resizable"] = True
 app.native.start_args["debug"] = True
@@ -50,22 +66,43 @@ editor_fontsize = 18
 # run ocp_vscode in a subprocess
 def startup_all():
     global ocpcv_proc
-    # spawn separate viewer process
-    env = os.environ.copy()  # Copy current environment
-    env['OCP_VSCODE_LOCK_DIR'] = env.get('OCP_VSCODE_LOCK_DIR', '/tmp/ocpvscode')  # Use env var or default
-    ocpcv_proc = subprocess.Popen(["python", "-m", "ocp_vscode", "--host", "0.0.0.0"], env=env)
-    # pre-import build123d and ocp_vscode in main thread
-    exec("from build123d import *\nfrom ocp_vscode import *")
+    try:
+        logger.info("Starting ocp_vscode subprocess")
+        # spawn separate viewer process
+        env = os.environ.copy()  # Copy current environment
+        env['OCP_VSCODE_LOCK_DIR'] = env.get('OCP_VSCODE_LOCK_DIR', '/tmp/ocpvscode')  # Use env var or default
+        logger.info(f"Subprocess environment OCP_VSCODE_LOCK_DIR: {env['OCP_VSCODE_LOCK_DIR']}")
+        ocpcv_proc = subprocess.Popen(["python", "-m", "ocp_vscode", "--host", "0.0.0.0"], env=env)
+        logger.info("ocp_vscode subprocess started")
+        
+        # pre-import build123d and ocp_vscode in main thread
+        logger.info("Importing build123d and ocp_vscode in main thread")
+        exec("from build123d import *\nfrom ocp_vscode import *")
+        logger.info("Imports completed")
+    except Exception as e:
+        logger.error(f"Error in startup: {str(e)}", exc_info=True)
+        raise
 
 
 def button_run_callback():
-    exec(code.value)
+    try:
+        logger.info("Executing user code")
+        exec(code.value)
+        logger.info("User code execution completed")
+    except Exception as e:
+        logger.error(f"Error executing user code: {str(e)}", exc_info=True)
+        raise  # Re-raise the exception to show it in the UI
 
 
 def shutdown_all():
-    ocpcv_proc.kill()
-    # ocpcv_proc.terminate() # TODO: investigate best cross-platform solution
-    app.shutdown()
+    try:
+        logger.info("Shutting down ocp_vscode subprocess")
+        ocpcv_proc.kill()
+        logger.info("ocp_vscode subprocess terminated")
+        app.shutdown()
+    except Exception as e:
+        logger.error(f"Error in shutdown: {str(e)}", exc_info=True)
+        raise
 
 
 app.on_startup(startup_all)
