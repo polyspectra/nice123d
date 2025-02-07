@@ -2,10 +2,14 @@ FROM python:3.11-slim
 
 WORKDIR /code
 
-# Install build dependencies and wget
+# Install build dependencies, wget, and OpenGL/X11 libraries
 RUN apt-get update && apt-get install -y \
     build-essential \
     wget \
+    libgl1-mesa-glx \
+    libgl1-mesa-dev \
+    libx11-6 \
+    libx11-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Create matplotlib config directory with proper permissions
