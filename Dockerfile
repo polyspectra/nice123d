@@ -2,22 +2,33 @@ FROM python:3.11-slim
 
 WORKDIR /code
 
-# Install build dependencies
+# Install build dependencies and wget
 RUN apt-get update && apt-get install -y \
     build-essential \
+    wget \
     && rm -rf /var/lib/apt/lists/*
 
 # Create matplotlib config directory with proper permissions
 ENV MPLCONFIGDIR=/tmp/matplotlib
 
+# Install uv
+RUN pip install uv
+
 # Copy only pyproject.toml first to leverage Docker cache
 COPY pyproject.toml .
 
-# Install project and dependencies
-RUN pip install .
+# Install project and dependencies using uv
+RUN uv pip install .
 
 # Copy the rest of the application
 COPY . .
+
+# Download and setup openvscode-server
+RUN wget https://github.com/gitpod-io/openvscode-server/releases/download/openvscode-server-v1.86.2/openvscode-server-v1.86.2-linux-x64.tar.gz -O /tmp/openvscode-server.tar.gz && \
+    tar -xzf /tmp/openvscode-server.tar.gz -C /opt && \
+    rm /tmp/openvscode-server.tar.gz && \
+    mv /opt/openvscode-server-v1.86.2-linux-x64 /opt/openvscode-server && \
+    chown -R 1000:1000 /opt/openvscode-server
 
 # Expose port 7860 for Hugging Face Spaces
 EXPOSE 7860
