@@ -46,7 +46,43 @@ RUN mkdir -p /var/lib/nginx/body && \
     chmod 755 /var/lib/nginx && \
     chmod -R 755 /var/lib/nginx/* && \
     chmod -R 755 /var/log/nginx && \
-    chmod -R 755 /run/nginx
+    chmod -R 755 /run/nginx && \
+    rm -f /etc/nginx/sites-enabled/default
+
+# Create test nginx configuration
+RUN echo 'worker_processes 1;\n\
+error_log stderr info;\n\
+pid /run/nginx/nginx.pid;\n\
+events {\n\
+    worker_connections 1024;\n\
+}\n\
+http {\n\
+    access_log /dev/stdout;\n\
+    upstream nicegui {\n\
+        server 127.0.0.1:7861;\n\
+    }\n\
+    upstream viewer {\n\
+        server 127.0.0.1:3939;\n\
+    }\n\
+    server {\n\
+        listen 7860;\n\
+        server_name localhost;\n\
+        location / {\n\
+            proxy_pass http://nicegui;\n\
+            proxy_http_version 1.1;\n\
+            proxy_set_header Upgrade $http_upgrade;\n\
+            proxy_set_header Connection "upgrade";\n\
+            proxy_set_header Host $host;\n\
+        }\n\
+        location /proxy/3939/viewer {\n\
+            proxy_pass http://viewer/viewer;\n\
+            proxy_http_version 1.1;\n\
+            proxy_set_header Upgrade $http_upgrade;\n\
+            proxy_set_header Connection "upgrade";\n\
+            proxy_set_header Host $host;\n\
+        }\n\
+    }\n\
+}' > /etc/nginx/nginx.conf
 
 # Create a test script for build-time verification
 RUN echo '#!/bin/bash\n\
@@ -59,7 +95,8 @@ python3 -m http.server 3939 &\n\
 VIEWER_PID=$!\n\
 \n\
 echo "Starting nginx..."\n\
-nginx\n\
+nginx -g "daemon off;" &\n\
+NGINX_PID=$!\n\
 \n\
 echo "Waiting for servers to start..."\n\
 sleep 2\n\
@@ -72,7 +109,7 @@ echo "Testing viewer proxy..."\n\
 VIEWER_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:7860/proxy/3939/viewer)\n\
 echo "Viewer status: $VIEWER_STATUS"\n\
 \n\
-nginx -s stop\n\
+kill $NGINX_PID\n\
 kill $SERVER_PID $VIEWER_PID\n\
 \n\
 if [ "$MAIN_STATUS" = "200" ] && [ "$VIEWER_STATUS" = "200" ]; then\n\
