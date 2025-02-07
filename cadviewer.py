@@ -99,6 +99,7 @@ def button_run_callback():
             logger.warning("Viewer not initialized yet, please wait...")
             return
             
+        time.sleep(0.5)  # Add a small delay to allow viewer initialization
         logger.info("Executing user code")
         # Create a clean namespace for execution
         namespace = {}
