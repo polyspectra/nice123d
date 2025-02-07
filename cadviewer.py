@@ -76,7 +76,11 @@ def startup_all():
         # spawn separate viewer process
         env = os.environ.copy()  # Copy current environment
         logger.info(f"Subprocess environment OCP_VSCODE_LOCK_DIR: {env['OCP_VSCODE_LOCK_DIR']}")
-        ocpcv_proc = subprocess.Popen(["python", "-m", "ocp_vscode", "--host", "0.0.0.0"], env=env)
+        # Start ocp_vscode on port 3939 and bind to all interfaces
+        ocpcv_proc = subprocess.Popen(
+            ["python", "-m", "ocp_vscode", "--host", "0.0.0.0", "--port", "3939"],
+            env=env
+        )
         logger.info("ocp_vscode subprocess started")
         
         # pre-import build123d and ocp_vscode in main thread
@@ -100,7 +104,8 @@ def check_viewer_ready():
         # Check from inside the container using localhost
         response = requests.get('http://localhost:3939/viewer')
         return response.status_code == 200
-    except:
+    except Exception as e:
+        logger.error(f"Error checking viewer: {str(e)}")
         return False
 
 def wait_for_viewer_ready(timeout=10):
@@ -188,10 +193,24 @@ with ui.splitter().classes(
         with ui.column().classes("w-full items-stretch border"):
             # Add a small delay before loading the iframe
             ui.timer(3.0, lambda: None, once=True)  # Wait for viewer to be ready
-            # Use relative URL to work in any environment
+            
+            # Get the current URL from the environment if available
+            space_url = os.getenv('SPACE_URL', '')
+            logger.info(f"Space URL: {space_url}")
+            
+            # Construct the viewer URL
+            if space_url:
+                # We're in a Hugging Face Space
+                viewer_url = f"{space_url}/proxy/3939/viewer"
+            else:
+                # Local development
+                viewer_url = "http://localhost:3939/viewer"
+                
+            logger.info(f"Using viewer URL: {viewer_url}")
+            
             ocpcv = (
                 ui.element("iframe")
-                .props('src="/proxy/3939/viewer"')  # Use Spaces proxy URL
+                .props(f'src="{viewer_url}"')
                 .classes("h-[calc(100vh-3rem)]")
             )
 
