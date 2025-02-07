@@ -104,9 +104,9 @@ http {\n\
             proxy_set_header X-Forwarded-Proto $scheme;\n\
         }\n\
         \n\
-        # Viewer route\n\
-        location /viewer/ {\n\
-            proxy_pass http://viewer/viewer/;\n\
+        # Viewer route - handle both /viewer and /viewer/ paths\n\
+        location ~ ^/viewer/?(.*)$ {\n\
+            proxy_pass http://viewer/viewer/$1;\n\
             proxy_http_version 1.1;\n\
             proxy_set_header Upgrade $http_upgrade;\n\
             proxy_set_header Connection $connection_upgrade;\n\

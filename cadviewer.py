@@ -67,11 +67,15 @@ editor_fontsize = 18
 # Global variables to track viewer and connection state
 viewer_initialized = False
 viewer_ready = False
+ocpcv_proc = None
 
-# run ocp_vscode in a subprocess
 def startup_all():
     global ocpcv_proc, viewer_initialized
     try:
+        if ocpcv_proc is not None:
+            logger.info("Viewer process already running")
+            return
+
         logger.info("Starting ocp_vscode subprocess")
         # spawn separate viewer process
         env = os.environ.copy()  # Copy current environment
@@ -101,8 +105,8 @@ def check_viewer_ready():
     """Check if the viewer is ready by attempting a test connection"""
     try:
         import requests
-        # Check the viewer through Nginx proxy
-        response = requests.get('http://localhost:7860/viewer/')
+        # Check the viewer directly since we're inside the container
+        response = requests.get('http://127.0.0.1:3939/viewer')
         return response.status_code == 200
     except Exception as e:
         logger.error(f"Error checking viewer: {str(e)}")
@@ -231,6 +235,7 @@ def main():
     )
 
 if __name__ == "__main__":
-    main()
+    startup_all()  # Start the viewer first
+    main()  # Then start the UI
 
 # layout info https://github.com/zauberzeug/nicegui/discussions/1937
