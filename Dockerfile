@@ -62,12 +62,9 @@ events {\n\
     worker_connections 1024;\n\
 }\n\
 http {\n\
-    # Disable access logging for normal requests\n\
     access_log off;\n\
-    # Only log errors\n\
     error_log stderr error;\n\
     \n\
-    # Ignore common client disconnect errors\n\
     log_not_found off;\n\
     \n\
     client_max_body_size 0;\n\
@@ -89,7 +86,6 @@ http {\n\
         listen 7860;\n\
         server_name localhost;\n\
         \n\
-        # Disable logging of client connection resets\n\
         proxy_ignore_client_abort on;\n\
         \n\
         # Main app (NiceGUI)\n\
@@ -104,9 +100,9 @@ http {\n\
             proxy_set_header X-Forwarded-Proto $scheme;\n\
         }\n\
         \n\
-        # Viewer route - handle both /viewer and /viewer/ paths\n\
-        location ~ ^/viewer/?(.*)$ {\n\
-            proxy_pass http://viewer/viewer/$1;\n\
+        # Viewer route\n\
+        location /viewer/ {\n\
+            proxy_pass http://viewer;\n\
             proxy_http_version 1.1;\n\
             proxy_set_header Upgrade $http_upgrade;\n\
             proxy_set_header Connection $connection_upgrade;\n\

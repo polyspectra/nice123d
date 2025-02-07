@@ -201,7 +201,7 @@ with ui.splitter().classes(
             logger.info(f"Space URL: {space_url}")
             
             # Construct the viewer URL - use relative path for both local and Space environments
-            viewer_url = "/viewer/"  # Changed to match Nginx configuration
+            viewer_url = "/viewer"  # Changed to match Nginx configuration
             logger.info(f"Using viewer URL: {viewer_url}")
             
             ocpcv = (
