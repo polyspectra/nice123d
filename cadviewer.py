@@ -33,22 +33,23 @@ license:
 
 """
 
+# Set environment variable before any imports
 import os
+os.environ['OCP_VSCODE_LOCK_DIR'] = '/tmp/ocpvscode'
+
 import logging
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Set environment variable before importing ocp_vscode
-lock_dir = os.environ.get('OCP_VSCODE_LOCK_DIR', '/tmp/ocpvscode')
-os.environ['OCP_VSCODE_LOCK_DIR'] = lock_dir
-logger.info(f"Using lock directory: {lock_dir}")
+# Log environment setup
+logger.info(f"Using lock directory: {os.environ['OCP_VSCODE_LOCK_DIR']}")
 logger.info(f"Current working directory: {os.getcwd()}")
-logger.info(f"Directory contents of lock dir parent: {os.listdir(os.path.dirname(lock_dir))}")
-logger.info(f"Lock dir exists: {os.path.exists(lock_dir)}")
-if os.path.exists(lock_dir):
-    logger.info(f"Lock dir permissions: {oct(os.stat(lock_dir).st_mode)[-3:]}")
+logger.info(f"Directory contents of lock dir parent: {os.listdir(os.path.dirname(os.environ['OCP_VSCODE_LOCK_DIR']))}")
+logger.info(f"Lock dir exists: {os.path.exists(os.environ['OCP_VSCODE_LOCK_DIR'])}")
+if os.path.exists(os.environ['OCP_VSCODE_LOCK_DIR']):
+    logger.info(f"Lock dir permissions: {oct(os.stat(os.environ['OCP_VSCODE_LOCK_DIR']).st_mode)[-3:]}")
 
 from nicegui import app, ui
 from nicegui.events import KeyEventArguments
@@ -70,7 +71,6 @@ def startup_all():
         logger.info("Starting ocp_vscode subprocess")
         # spawn separate viewer process
         env = os.environ.copy()  # Copy current environment
-        env['OCP_VSCODE_LOCK_DIR'] = env.get('OCP_VSCODE_LOCK_DIR', '/tmp/ocpvscode')  # Use env var or default
         logger.info(f"Subprocess environment OCP_VSCODE_LOCK_DIR: {env['OCP_VSCODE_LOCK_DIR']}")
         ocpcv_proc = subprocess.Popen(["python", "-m", "ocp_vscode", "--host", "0.0.0.0"], env=env)
         logger.info("ocp_vscode subprocess started")
