@@ -102,19 +102,31 @@ def check_viewer_ready():
     except:
         return False
 
+def wait_for_viewer_ready(timeout=10):
+    """Wait until the viewer HTTP exists and return True if ready within the timeout."""
+    start = time.time()
+    while time.time() - start < timeout:
+        if check_viewer_ready():
+            logger.info("Viewer HTTP endpoint is up.")
+            return True
+        logger.info("Waiting for viewer readiness...")
+        time.sleep(0.5)
+    return False
+
 def button_run_callback():
     try:
         if not viewer_initialized:
             logger.warning("Viewer not initialized yet, please wait...")
             return
-            
-        # Add a check for viewer readiness
-        if not check_viewer_ready():
-            logger.warning("Viewer not ready yet, please wait a moment and try again...")
+
+        # Wait for viewer readiness with a timeout.
+        if not wait_for_viewer_ready(timeout=10):
+            logger.warning("Viewer not ready yet after waiting, please try again later...")
             return
 
-        # Add a delay to ensure WebSocket connection is established
-        time.sleep(1)  # Increased delay for WebSocket setup
+        # Additional delay to ensure that the websocket connection is established.
+        logger.info("Viewer HTTP ready, waiting extra 2 seconds for websocket connection...")
+        time.sleep(2)  # Increased delay for WebSocket setup
         
         logger.info("Executing user code")
         # Create a clean namespace for execution
