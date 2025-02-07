@@ -38,6 +38,7 @@ import os
 os.environ['OCP_VSCODE_LOCK_DIR'] = '/tmp/ocpvscode'
 
 import logging
+import time
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -63,10 +64,12 @@ app.native.settings["MATPLOTLIB"] = False
 editor_fontsize = 18
 # TODO: consider separate editor execution thread from nicegui thread
 
+# Global variable to track viewer initialization
+viewer_initialized = False
 
 # run ocp_vscode in a subprocess
 def startup_all():
-    global ocpcv_proc
+    global ocpcv_proc, viewer_initialized
     try:
         logger.info("Starting ocp_vscode subprocess")
         # spawn separate viewer process
@@ -79,6 +82,12 @@ def startup_all():
         logger.info("Importing build123d and ocp_vscode in main thread")
         exec("from build123d import *\nfrom ocp_vscode import *")
         logger.info("Imports completed")
+        
+        # Wait for viewer to initialize
+        logger.info("Waiting for viewer to initialize...")
+        time.sleep(2)  # Give the viewer some time to start
+        viewer_initialized = True
+        logger.info("Viewer initialization complete")
     except Exception as e:
         logger.error(f"Error in startup: {str(e)}", exc_info=True)
         raise
@@ -86,8 +95,16 @@ def startup_all():
 
 def button_run_callback():
     try:
+        if not viewer_initialized:
+            logger.warning("Viewer not initialized yet, please wait...")
+            return
+            
         logger.info("Executing user code")
-        exec(code.value)
+        # Create a clean namespace for execution
+        namespace = {}
+        exec("from build123d import *\nfrom ocp_vscode import *", namespace)
+        exec("set_defaults(reset_camera=Camera.KEEP)\nset_port(3939)", namespace)
+        exec(code.value, namespace)
         logger.info("User code execution completed")
     except Exception as e:
         logger.error(f"Error executing user code: {str(e)}", exc_info=True)
