@@ -51,7 +51,9 @@ editor_fontsize = 18
 def startup_all():
     global ocpcv_proc
     # spawn separate viewer process
-    ocpcv_proc = subprocess.Popen(["python", "-m", "ocp_vscode", "--host", "0.0.0.0"])
+    env = os.environ.copy()  # Copy current environment
+    env['OCP_VSCODE_LOCK_DIR'] = env.get('OCP_VSCODE_LOCK_DIR', '/tmp/ocpvscode')  # Use env var or default
+    ocpcv_proc = subprocess.Popen(["python", "-m", "ocp_vscode", "--host", "0.0.0.0"], env=env)
     # pre-import build123d and ocp_vscode in main thread
     exec("from build123d import *\nfrom ocp_vscode import *")
 
