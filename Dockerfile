@@ -100,8 +100,11 @@ http {\n\
             proxy_set_header X-Forwarded-Proto $scheme;\n\
         }\n\
         \n\
-        # Viewer route - pass the full URI directly to the viewer upstream\n\
+        # Viewer route - pass the full URI directly to the viewer upstream with rewriting for exact /viewer/\n\
         location /viewer/ {\n\
+            if ($request_uri = "/viewer/") {\n\
+                rewrite ^ /viewer break;\n\
+            }\n\
             proxy_pass http://viewer;\n\
             proxy_http_version 1.1;\n\
             proxy_set_header Upgrade $http_upgrade;\n\
