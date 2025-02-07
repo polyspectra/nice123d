@@ -27,9 +27,10 @@ ENV OCP_VSCODE_LOCK_DIR=/tmp/ocpvscode
 
 # Create a non-root user and set up home directory
 RUN useradd -m -d /home/appuser -s /bin/bash appuser && \
-    mkdir -p /home/appuser/.ocpvscode && \
+    touch /home/appuser/.ocpvscode && \
+    echo "{}" > /home/appuser/.ocpvscode && \
     chown -R appuser:appuser /home/appuser && \
-    chmod 777 /home/appuser/.ocpvscode
+    chmod 666 /home/appuser/.ocpvscode
 
 # Install uv and create virtual environment
 RUN pip install uv && \

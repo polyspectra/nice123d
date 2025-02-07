@@ -14,7 +14,7 @@ A nicegui-based CAD customizer, editor, and viewer for OCP-based projects like b
 * Also thanks to the [nicegui](https://github.com/zauberzeug/nicegui) project
 
 After installing the dependencies, just run the file like:
-```
+```python
 python cadviewer.py
 ```
 
