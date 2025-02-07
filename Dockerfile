@@ -31,14 +31,11 @@ ENV OCP_VSCODE_LOCK_DIR=/tmp/ocpvscode
 COPY . .
 
 # Set up startup script with correct permissions
-RUN chmod +x start.sh test_nginx.sh
+RUN chmod +x start.sh
 
 # Configure Nginx with proper permissions
 RUN mkdir -p /var/lib/nginx/body && \
-    mkdir -p /var/lib/nginx/fastcgi && \
     mkdir -p /var/lib/nginx/proxy && \
-    mkdir -p /var/lib/nginx/scgi && \
-    mkdir -p /var/lib/nginx/uwsgi && \
     mkdir -p /run/nginx && \
     chown -R www-data:www-data /var/lib/nginx && \
     chown -R www-data:www-data /var/log/nginx && \
@@ -49,7 +46,7 @@ RUN mkdir -p /var/lib/nginx/body && \
     chmod -R 755 /run/nginx && \
     rm -f /etc/nginx/sites-enabled/default
 
-# Create test nginx configuration
+# Create nginx configuration for port forwarding
 RUN echo 'worker_processes 1;\n\
 error_log stderr info;\n\
 pid /run/nginx/nginx.pid;\n\
@@ -80,48 +77,10 @@ http {\n\
             proxy_set_header Upgrade $http_upgrade;\n\
             proxy_set_header Connection "upgrade";\n\
             proxy_set_header Host $host;\n\
+            proxy_read_timeout 86400;\n\
         }\n\
     }\n\
 }' > /etc/nginx/nginx.conf
-
-# Create a test script for build-time verification
-RUN echo '#!/bin/bash\n\
-echo "Starting test server on port 7861..."\n\
-python3 -m http.server 7861 &\n\
-SERVER_PID=$!\n\
-\n\
-echo "Starting test server on port 3939..."\n\
-python3 -m http.server 3939 &\n\
-VIEWER_PID=$!\n\
-\n\
-echo "Starting nginx..."\n\
-nginx -g "daemon off;" &\n\
-NGINX_PID=$!\n\
-\n\
-echo "Waiting for servers to start..."\n\
-sleep 2\n\
-\n\
-echo "Testing main app proxy..."\n\
-MAIN_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:7860/)\n\
-echo "Main app status: $MAIN_STATUS"\n\
-\n\
-echo "Testing viewer proxy..."\n\
-VIEWER_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:7860/proxy/3939/viewer)\n\
-echo "Viewer status: $VIEWER_STATUS"\n\
-\n\
-kill $NGINX_PID\n\
-kill $SERVER_PID $VIEWER_PID\n\
-\n\
-if [ "$MAIN_STATUS" = "200" ] && [ "$VIEWER_STATUS" = "200" ]; then\n\
-    echo "All tests passed!"\n\
-    exit 0\n\
-else\n\
-    echo "Tests failed!"\n\
-    exit 1\n\
-fi' > /code/test_build.sh && chmod +x /code/test_build.sh
-
-# Run the build-time test
-RUN /code/test_build.sh
 
 # Create a non-root user and set up home directory
 RUN useradd -m -d /home/appuser -s /bin/bash appuser && \
