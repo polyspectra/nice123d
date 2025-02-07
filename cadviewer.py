@@ -36,6 +36,11 @@ license:
 from nicegui import app, ui
 from nicegui.events import KeyEventArguments
 import subprocess
+import os
+
+# Get the Spaces URL from environment
+SPACE_URL = os.getenv('SPACE_URL', '')
+BASE_URL = f"/{SPACE_URL}" if SPACE_URL else ""
 
 app.native.window_args["resizable"] = True
 app.native.start_args["debug"] = True
@@ -110,11 +115,12 @@ keyboard = ui.keyboard(on_key=handle_key)
 # TODO: consider separating this module and how best to organize it (if name == main, etc.)
 app.on_shutdown(shutdown_all)  # register shutdown handler
 ui.run(
-    native=True,
-    window_size=(1800, 900),
+    native=False,  # Changed from True to False for web deployment
+    host='0.0.0.0',  # Listen on all interfaces
+    port=8080,  # Use port 8080 for Spaces
     title="nicegui-cadviewer",
-    fullscreen=False,
     reload=False,
+    base_url=BASE_URL  # Add base_url for Spaces
 )
 # ui.run(native=True, window_size=(1800, 900), fullscreen=False, reload=True) #use reload=True when developing rapidly, False helps exit behavior
 

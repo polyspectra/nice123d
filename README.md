@@ -1,3 +1,12 @@
+---
+title: Nice123d
+emoji: 🛠️
+colorFrom: blue
+colorTo: green
+sdk: docker
+pinned: false
+---
+
 # nice123d
 A nicegui-based CAD customizer, editor, and viewer for OCP-based projects like build123d
 
