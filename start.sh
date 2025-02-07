@@ -1,13 +1,5 @@
 #!/bin/bash
 
-# Create required directories with correct permissions
-mkdir -p /var/log/nginx
-chmod 777 /var/log/nginx
-touch /var/log/nginx/error.log
-chmod 666 /var/log/nginx/error.log
-touch /var/log/nginx/access.log
-chmod 666 /var/log/nginx/access.log
-
 # Start Nginx
 nginx
 

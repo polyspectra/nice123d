@@ -27,24 +27,32 @@ RUN mkdir -p /.cache/ezdxf && \
 # Set OCP_VSCODE_LOCK_DIR environment variable
 ENV OCP_VSCODE_LOCK_DIR=/tmp/ocpvscode
 
-# Copy application files first
+# Create a non-root user first
+RUN useradd -m -d /home/appuser -s /bin/bash appuser
+
+# Set up Nginx directories and permissions
+RUN mkdir -p /var/lib/nginx/body \
+             /var/lib/nginx/fastcgi \
+             /var/lib/nginx/proxy \
+             /var/lib/nginx/scgi \
+             /var/lib/nginx/uwsgi \
+             /run/nginx && \
+    touch /var/log/nginx/access.log && \
+    touch /var/log/nginx/error.log && \
+    chown -R appuser:appuser /var/lib/nginx \
+                            /var/log/nginx \
+                            /run/nginx \
+                            /etc/nginx && \
+    chmod -R 755 /var/lib/nginx && \
+    chmod -R 644 /var/log/nginx/* && \
+    chmod -R 755 /run/nginx && \
+    rm -f /etc/nginx/sites-enabled/default
+
+# Copy application files
 COPY . .
 
 # Set up startup script with correct permissions
 RUN chmod +x start.sh
-
-# Configure Nginx with proper permissions
-RUN mkdir -p /var/lib/nginx/body && \
-    mkdir -p /var/lib/nginx/proxy && \
-    mkdir -p /run/nginx && \
-    chown -R www-data:www-data /var/lib/nginx && \
-    chown -R www-data:www-data /var/log/nginx && \
-    chown -R www-data:www-data /run/nginx && \
-    chmod 755 /var/lib/nginx && \
-    chmod -R 755 /var/lib/nginx/* && \
-    chmod -R 755 /var/log/nginx && \
-    chmod -R 755 /run/nginx && \
-    rm -f /etc/nginx/sites-enabled/default
 
 # Create nginx configuration for port forwarding
 RUN echo 'worker_processes 1;\n\
@@ -80,11 +88,11 @@ http {\n\
             proxy_read_timeout 86400;\n\
         }\n\
     }\n\
-}' > /etc/nginx/nginx.conf
+}' > /etc/nginx/nginx.conf && \
+    chown appuser:appuser /etc/nginx/nginx.conf
 
-# Create a non-root user and set up home directory
-RUN useradd -m -d /home/appuser -s /bin/bash appuser && \
-    touch /home/appuser/.ocpvscode && \
+# Set up .ocpvscode file
+RUN touch /home/appuser/.ocpvscode && \
     echo "{}" > /home/appuser/.ocpvscode && \
     chown -R appuser:appuser /home/appuser && \
     chmod 666 /home/appuser/.ocpvscode
@@ -105,11 +113,9 @@ RUN wget https://github.com/gitpod-io/openvscode-server/releases/download/openvs
     rm /tmp/openvscode-server.tar.gz && \
     mv /opt/openvscode-server-v1.86.2-linux-x64 /opt/openvscode-server
 
-# Set permissions for the entire /code directory and nginx config
+# Set permissions for the entire /code directory
 RUN chown -R appuser:appuser /code && \
-    chown -R appuser:appuser /opt/openvscode-server && \
-    chown -R appuser:appuser /etc/nginx && \
-    chmod -R 755 /etc/nginx
+    chown -R appuser:appuser /opt/openvscode-server
 
 # Switch to non-root user
 USER appuser
