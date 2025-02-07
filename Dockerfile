@@ -11,7 +11,6 @@ RUN apt-get update && apt-get install -y \
     libx11-6 \
     libx11-dev \
     libxrender1 \
-    xvfb \
     && rm -rf /var/lib/apt/lists/*
 
 # Create matplotlib config directory with proper permissions
@@ -43,5 +42,5 @@ RUN wget https://github.com/gitpod-io/openvscode-server/releases/download/openvs
 # Expose port 7860 for Hugging Face Spaces
 EXPOSE 7860
 
-# Run the application with xvfb-run
-CMD ["xvfb-run", "--auto-servernum", "python", "-c", "import cadviewer; from nicegui import app; app.native.start_args['port'] = 7860; cadviewer.ui.run(native=False, host='0.0.0.0', port=7860)"] 
+# Run the application
+CMD ["python", "-c", "import cadviewer; from nicegui import app; app.native.start_args['port'] = 7860; cadviewer.ui.run(native=False, host='0.0.0.0', port=7860)"] 
